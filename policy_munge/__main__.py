@@ -1,8 +1,8 @@
 import sys
 
-from policy_munge.lambda_handler import lambda_handler
+from policy_munge.munge_policy_handler import munge_policy_handler
 
 try:
-    lambda_handler({}, {})
+    munge_policy_handler({}, {})
 except Exception as e:
     print(e, file=sys.stderr)

@@ -27,17 +27,17 @@ RBAC_PII_DB_SUFFIX = "unredacted"
 
 """
 ============================================================================================================
-========================================== Policy Munging Lambda ===========================================
+========================================== Policy Munging script ===========================================
 
-The lambda is used to munge policies together, in order to allow larger numbers of policies to be assigned 
+The script is used to munge policies together, in order to allow larger numbers of policies to be assigned 
 to a single IAM role than would otherwise be possible.
 
  Process: 
- - All roles previously created by the lambda are collated into a list and compared with what is in the rds 
+ - All roles previously created by the script are collated into a list and compared with what is in the rds 
  db and roles present in the db and not in aws are created.
  - All existing AWS policies are collected into a list, the list is filtered to find the policies in the 
  input list.
- - The lambda sets up an list of objects, one for each policy name provided in the policyname list created 
+ - The script sets up an list of objects, one for each policy name provided in the policyname list created 
  from the db:
  [
     {
@@ -54,14 +54,14 @@ to a single IAM role than would otherwise be possible.
  - The policies are attached to the existing role passed in as an input.
  - The role is tagged with the names of the input policies for visability - the tags undergo a similar 
  process to the policy JSON to ensure they don't hit their char limit. 
- - If a user role is marked for deletion in the db the lambda deletes the policies attached to it, then deletes
+ - If a user role is marked for deletion in the db the script deletes the policies attached to it, then deletes
   the role
  
 ============================================================================================================
 """
 
 
-def lambda_handler(event, context):
+def munge_policy_handler(event, context):
     config = get_config()
 
     cognito_client = aws_caller.create_cognito_client(
@@ -326,7 +326,7 @@ def assign_chunk_number_to_objects(object_list, start_char, max_char):
     return object_list
 
 
-# deletes any existing policies made by the lambda to apply the fresh set to user
+# deletes any existing policies made by the script to apply the fresh set to user
 def remove_existing_user_policies(role_name, all_policy_list):
     regex = re.compile(rf"{role_name}-\d*of\d*")
     for policy in all_policy_list:
@@ -368,7 +368,7 @@ def attach_policies_to_role(list_of_policy_arns, role_name):
         aws_caller.attach_policy_to_role(arn, role_name)
 
 
-# finds all tags created by this lambda on a given role and deletes them
+# finds all tags created by this script on a given role and deletes them
 def delete_tags(role_name):
     tags = aws_caller.get_all_role_tags(role_name)
     regex = re.compile(f"InputPolicies-\d*of\d*")

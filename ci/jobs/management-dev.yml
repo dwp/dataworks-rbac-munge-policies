@@ -2,6 +2,8 @@ jobs:
   - name: management-dev
     max_in_flight: 1
     plan:
+      - get: dataworks-rbac-munge-policies-dev-sb
+        trigger: true
       - get: dataworks-rbac-munge-policies
         trigger: true
       - .: (( inject meta.plan.terraform-bootstrap ))

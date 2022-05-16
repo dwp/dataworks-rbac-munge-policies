@@ -202,8 +202,10 @@ class LambdaHandlerTests(TestCase):
 
     @patch("munge_policy_handler.CHAR_LIMIT_JSON_POLICY", 70)
     def test_chunk_policies_and_return_dict_of_policy_name_to_json_CHUNKED(self):
-        result = munge_policy_handler.chunk_policies_and_return_dict_of_policy_name_to_json(
-            mocked_policy_object_list, "user_one", "emrfs_user_one"
+        result = (
+            munge_policy_handler.chunk_policies_and_return_dict_of_policy_name_to_json(
+                mocked_policy_object_list, "user_one", "emrfs_user_one"
+            )
         )
 
         assert result.get("emrfs_user_one-1of2") == {
@@ -217,8 +219,10 @@ class LambdaHandlerTests(TestCase):
 
     @patch("munge_policy_handler.CHAR_LIMIT_JSON_POLICY", 100)
     def test_chunk_policies_and_return_dict_of_policy_name_to_json_NO_CHUNKS(self):
-        result = munge_policy_handler.chunk_policies_and_return_dict_of_policy_name_to_json(
-            mocked_policy_object_list, "user_one", "emrfs_user_one"
+        result = (
+            munge_policy_handler.chunk_policies_and_return_dict_of_policy_name_to_json(
+                mocked_policy_object_list, "user_one", "emrfs_user_one"
+            )
         )
 
         assert result.get("emrfs_user_one-1of1") == {
@@ -349,7 +353,8 @@ class LambdaHandlerTests(TestCase):
         }
 
         assert (
-            munge_policy_handler.role_needs_update("RoleName", '[{"Sid":"test_sid"}]') is True
+            munge_policy_handler.role_needs_update("RoleName", '[{"Sid":"test_sid"}]')
+            is True
         )
 
     @patch("munge_policy_handler.aws_caller.get_all_role_tags")

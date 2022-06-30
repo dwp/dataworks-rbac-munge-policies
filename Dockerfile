@@ -5,7 +5,7 @@ RUN mkdir -p ${app_path}
 RUN apk add --no-cache bash
 COPY policy-munge-lambda-files/  ${app_path}
 
-RUN -r ${app_path}/requirements.txt
+RUN pip install -r ${app_path}/requirements.txt
 WORKDIR ${app_path}
 ENV AWS_DEFAULT_REGION='eu-west-2'
 ENTRYPOINT ["python", "policy_munge/__main__.py"]

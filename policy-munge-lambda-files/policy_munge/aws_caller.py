@@ -6,7 +6,7 @@ import boto3
 import botocore
 from botocore.config import Config
 
-from policy_munge.config import get_config, ConfigKeys
+from config import get_config, ConfigKeys
 
 logger = logging.getLogger()
 logger.level = logging.INFO
@@ -195,7 +195,7 @@ def wait_for_policy_to_exist(arn):
 #
 def get_emrfs_roles():
     """
-    Gets list of all roles previously created by this script
+    Gets list of all roles previously created by this lambda
     :return: list of role names
     """
     role_list = []

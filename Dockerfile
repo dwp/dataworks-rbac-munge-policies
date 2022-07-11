@@ -1,4 +1,4 @@
-FROM python:3.8-alpine3.10
+FROM python:python:3.10.4-slim-bullseye
 
 ENV app_path /usr/src/app
 RUN mkdir -p ${app_path}

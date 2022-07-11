@@ -10,7 +10,7 @@ resources:
   - name: dataworks-rbac-munge-policies
     type: git
     source:
-      branch: master
+      branch: fix-dockerfile-n-ci
       uri: https://github.com/dwp/dataworks-rbac-munge-policies.git
       access_token: ((dataworks-secrets.concourse_github_pat))
     webhook_token: ((dataworks.concourse_github_webhook_token))

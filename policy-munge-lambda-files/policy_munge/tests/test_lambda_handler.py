@@ -4,7 +4,7 @@ from unittest import TestCase
 
 from mock import call, patch, MagicMock
 
-import munge_policy_handler
+import lambda_handler
 from util import str_md5_digest
 
 iam_template = {"Version": "2012-10-17", "Statement": []}
@@ -150,18 +150,18 @@ mock_statement_three = {
 
 
 class LambdaHandlerTests(TestCase):
-    @patch("munge_policy_handler.aws_caller.execute_statement")
+    @patch("lambda_handler.aws_caller.execute_statement")
     def test_get_user_userstatus_policy_dict(self, mock_execute_statement):
         mock_execute_statement.side_effect = [
             mocked_db_response,
             {"numberOfRecordsUpdated": 0, "records": []},
         ]
-        result1 = munge_policy_handler.get_db_user_info()
+        result1 = lambda_handler.get_db_user_info()
         assert result1 == mocked_user_dict
 
-        self.assertRaises(ValueError, munge_policy_handler.get_db_user_info)
+        self.assertRaises(ValueError, lambda_handler.get_db_user_info)
 
-    @patch("munge_policy_handler.aws_caller.create_role_and_await_consistency")
+    @patch("lambda_handler.aws_caller.create_role_and_await_consistency")
     def test_check_roles_exist_and_create_if_not(
         self, mock_create_role_and_await_consistency
     ):
@@ -169,13 +169,13 @@ class LambdaHandlerTests(TestCase):
         both_roles_exist = ["emrfs_user_one", "emrfs_user_two"]
         mock_create_role_and_await_consistency.return_value = "created_user"
 
-        result1 = munge_policy_handler.ensure_roles(
+        result1 = lambda_handler.ensure_roles(
             both_roles_exist, mocked_user_dict, variables["assume_role_policy_json"]
         )
         mock_create_role_and_await_consistency.assert_not_called()
         assert result1 == ["emrfs_user_one", "emrfs_user_two"]
 
-        result2 = munge_policy_handler.ensure_roles(
+        result2 = lambda_handler.ensure_roles(
             one_role_does_not_exist,
             mocked_user_dict,
             variables["assume_role_policy_json"],
@@ -186,13 +186,13 @@ class LambdaHandlerTests(TestCase):
         )
         assert result2 == ["emrfs_user_one", "created_user"]
 
-    @patch("munge_policy_handler.aws_caller.get_policy_statements")
+    @patch("lambda_handler.aws_caller.get_policy_statements")
     def test_create_policy_object_list_from_policy_name_list(
         self, mock_get_policy_statements
     ):
         mock_get_policy_statements.return_value = [{"test": "statement"}]
 
-        result = munge_policy_handler.get_policy_info(
+        result = lambda_handler.get_policy_info(
             ["policy_one", "policy_three"], mocked_all_policy_list
         )
 
@@ -200,12 +200,10 @@ class LambdaHandlerTests(TestCase):
         assert result[1].get("policy_name") == "policy_three"
         assert result[0].get("statement") == [{"test": "statement"}]
 
-    @patch("munge_policy_handler.CHAR_LIMIT_JSON_POLICY", 70)
+    @patch("lambda_handler.CHAR_LIMIT_JSON_POLICY", 70)
     def test_chunk_policies_and_return_dict_of_policy_name_to_json_CHUNKED(self):
-        result = (
-            munge_policy_handler.chunk_policies_and_return_dict_of_policy_name_to_json(
-                mocked_policy_object_list, "user_one", "emrfs_user_one"
-            )
+        result = lambda_handler.chunk_policies_and_return_dict_of_policy_name_to_json(
+            mocked_policy_object_list, "user_one", "emrfs_user_one"
         )
 
         assert result.get("emrfs_user_one-1of2") == {
@@ -217,12 +215,10 @@ class LambdaHandlerTests(TestCase):
             "Statement": [{"test": "statement2"}],
         }
 
-    @patch("munge_policy_handler.CHAR_LIMIT_JSON_POLICY", 100)
+    @patch("lambda_handler.CHAR_LIMIT_JSON_POLICY", 100)
     def test_chunk_policies_and_return_dict_of_policy_name_to_json_NO_CHUNKS(self):
-        result = (
-            munge_policy_handler.chunk_policies_and_return_dict_of_policy_name_to_json(
-                mocked_policy_object_list, "user_one", "emrfs_user_one"
-            )
+        result = lambda_handler.chunk_policies_and_return_dict_of_policy_name_to_json(
+            mocked_policy_object_list, "user_one", "emrfs_user_one"
         )
 
         assert result.get("emrfs_user_one-1of1") == {
@@ -230,39 +226,39 @@ class LambdaHandlerTests(TestCase):
             "Statement": [{"test": "statement1"}, {"test": "statement2"}],
         }
 
-    @patch("munge_policy_handler.aws_caller.remove_policy_being_replaced")
+    @patch("lambda_handler.aws_caller.remove_policy_being_replaced")
     def test_remove_existing_user_policies(self, mock_remove_policy_being_replaced):
         calls = [
             call("arn:iam:123432/Policy/emrfs_test1", "emrfs_user_one"),
             call("arn:iam:123432/Policy/emrfs_test2", "emrfs_user_one"),
         ]
-        munge_policy_handler.remove_existing_user_policies(
+        lambda_handler.remove_existing_user_policies(
             "emrfs_user_no_policies", mocked_all_policy_list
         )
 
         mock_remove_policy_being_replaced.assert_not_called()
 
-        munge_policy_handler.remove_existing_user_policies(
+        lambda_handler.remove_existing_user_policies(
             "emrfs_user_one", mocked_all_policy_list
         )
 
         mock_remove_policy_being_replaced.assert_has_calls(calls, any_order=True)
 
-    @patch("munge_policy_handler.aws_caller.get_all_role_tags")
-    @patch("munge_policy_handler.aws_caller.delete_role_tags")
+    @patch("lambda_handler.aws_caller.get_all_role_tags")
+    @patch("lambda_handler.aws_caller.delete_role_tags")
     def test_delete_tags(self, mock_delete_role_tags, mock_get_all_role_tags):
         mock_get_all_role_tags.return_value = mocked_role_tags_response
 
-        munge_policy_handler.delete_tags("emrfs_user_one")
+        lambda_handler.delete_tags("emrfs_user_one")
 
         mock_get_all_role_tags.assert_called_once()
         mock_delete_role_tags.assert_called_with(
             ["InputPolicies-1of20", "InputPolicies-18of20"], "emrfs_user_one"
         )
 
-    @patch("munge_policy_handler.aws_caller.tag_role")
+    @patch("lambda_handler.aws_caller.tag_role")
     def test_tag_role_with_policies_NOT_CHUNKED(self, mock_tag_role: MagicMock):
-        munge_policy_handler.tag_role_with_policies(
+        lambda_handler.tag_role_with_policies(
             ["policy_one", "policy_two"], "emrfs_user_one", variables["common_tags"]
         )
         mock_tag_role.assert_called()
@@ -277,10 +273,10 @@ class LambdaHandlerTests(TestCase):
             ],
         )
 
-    @patch("munge_policy_handler.CHAR_LIMIT_TAG_VALUE", 20)
-    @patch("munge_policy_handler.aws_caller.tag_role")
+    @patch("lambda_handler.CHAR_LIMIT_TAG_VALUE", 20)
+    @patch("lambda_handler.aws_caller.tag_role")
     def test_tag_role_with_policies_CHUNKED(self, mock_tag_role: MagicMock):
-        munge_policy_handler.tag_role_with_policies(
+        lambda_handler.tag_role_with_policies(
             ["policy_one", "policy_two"], "emrfs_user_one", variables["common_tags"]
         )
         mock_tag_role.assert_called()
@@ -296,12 +292,12 @@ class LambdaHandlerTests(TestCase):
             ],
         )
 
-    @patch("munge_policy_handler.aws_caller.get_kms_arn")
+    @patch("lambda_handler.aws_caller.get_kms_arn")
     def test_create_policy_document_from_template(self, mock_get_kms_arn):
         mock_get_kms_arn.side_effect = [
             "arn:aws:kms:eu-west-7:1234567:key/testuser-12ab-34cd-56ef-1234567890ab"
         ]
-        result = munge_policy_handler.create_policy_document_from_template(
+        result = lambda_handler.create_policy_document_from_template(
             "test_user", variables["s3fs_bucket_arn"], variables["s3fs_kms_arn"]
         )
         assert result[0] == mock_statement_one
@@ -318,7 +314,7 @@ class LambdaHandlerTests(TestCase):
             copy.deepcopy(mock_statement_three),
             copy.deepcopy(mock_statement_one),
         ]
-        munge_policy_handler.prevent_matching_sids(duplicate_sid["Statement"])
+        lambda_handler.prevent_matching_sids(duplicate_sid["Statement"])
         sids_in_processed_json = [
             statement_object["Sid"] for statement_object in duplicate_sid["Statement"]
         ]
@@ -331,10 +327,10 @@ class LambdaHandlerTests(TestCase):
             "s3fsaccessdocument2",
         ]
 
-    @patch("munge_policy_handler.aws_caller.get_kms_arn")
+    @patch("lambda_handler.aws_caller.get_kms_arn")
     def test_handle_group_kms_not_found_issues(self, mock_get_kms_arn):
         mock_get_kms_arn.side_effect = [None]
-        missing_user_key = munge_policy_handler.create_policy_document_from_template(
+        missing_user_key = lambda_handler.create_policy_document_from_template(
             "test_user", variables["s3fs_bucket_arn"], variables["s3fs_kms_arn"]
         )
 
@@ -346,18 +342,17 @@ class LambdaHandlerTests(TestCase):
         ]
         assert missing_user_key[2].get("Resource") == ["arn:12345432::s3_test_arn"]
 
-    @patch("munge_policy_handler.aws_caller.get_all_role_tags")
+    @patch("lambda_handler.aws_caller.get_all_role_tags")
     def test_role_needs_update_no_hash(self, mock_get_role_tags: MagicMock):
         mock_get_role_tags.return_value = {
             "Tags": [{"Key": "UnusedKey", "Value": "UnusedValue"}]
         }
 
         assert (
-            munge_policy_handler.role_needs_update("RoleName", '[{"Sid":"test_sid"}]')
-            is True
+            lambda_handler.role_needs_update("RoleName", '[{"Sid":"test_sid"}]') is True
         )
 
-    @patch("munge_policy_handler.aws_caller.get_all_role_tags")
+    @patch("lambda_handler.aws_caller.get_all_role_tags")
     def test_role_needs_update_changed(self, mock_get_role_tags: MagicMock):
         old_policy = json.dumps([{"Sid": "test_sid"}])
         mock_get_role_tags.return_value = {
@@ -367,13 +362,13 @@ class LambdaHandlerTests(TestCase):
         }
 
         new_policy = json.dumps([{"Sid": "test_sid", "Effect": "Allow"}])
-        assert munge_policy_handler.role_needs_update("RoleName", new_policy) is True
+        assert lambda_handler.role_needs_update("RoleName", new_policy) is True
 
-    @patch("munge_policy_handler.aws_caller.get_all_role_tags")
+    @patch("lambda_handler.aws_caller.get_all_role_tags")
     def test_role_needs_update_not_changed(self, mock_get_role_tags: MagicMock):
         policy = json.dumps([{"Sid": "test_sid"}])
         mock_get_role_tags.return_value = {
             "Tags": [{"Key": "AttachedPoliciesHash", "Value": str_md5_digest(policy)}]
         }
 
-        assert munge_policy_handler.role_needs_update("RoleName", policy) is False
+        assert lambda_handler.role_needs_update("RoleName", policy) is False

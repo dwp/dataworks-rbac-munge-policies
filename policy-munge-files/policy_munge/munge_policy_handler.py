@@ -69,7 +69,7 @@ def munge_policy_handler(event, context):
     cognito_client = aws_caller.create_cognito_client(
         get_config(ConfigKeys.mgmt_account)
     )
-    
+
     pii_users = aws_caller.get_pii_users(
         get_config(ConfigKeys.user_pool_id), COGNITO_PII_GROUP_NAME, cognito_client
     )

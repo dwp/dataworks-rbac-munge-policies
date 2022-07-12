@@ -62,7 +62,7 @@ to a single IAM role than would otherwise be possible.
 """
 
 
-def lambda_handler(event, context):
+def munge_policy_handler(event, context):
 
     config = get_config()
 

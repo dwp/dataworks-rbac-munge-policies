@@ -1,3 +1,7 @@
+.DS_Store
+.vscode
+aviator_pipeline.yml
 .idea
+**/.terraform/
 **/terraform.tf
 **/terraform.tfvars

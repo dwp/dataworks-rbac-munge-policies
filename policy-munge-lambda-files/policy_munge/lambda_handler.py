@@ -113,7 +113,6 @@ def lambda_handler(event, context):
 
         if user_info[user_name]["role_name"] in existing_role_list:
             if user_info[user_name]["active"]:
-
                 list_of_policy_objects = get_policy_info(
                     a_user_filtered_policy_name_list, all_policy_list
                 )

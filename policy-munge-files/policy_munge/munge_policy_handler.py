@@ -63,7 +63,6 @@ to a single IAM role than would otherwise be possible.
 
 
 def munge_policy_handler(event, context):
-
     config = get_config()
 
     cognito_client = aws_caller.create_cognito_client(
@@ -109,7 +108,6 @@ def munge_policy_handler(event, context):
 
         if user_info[user_name]["role_name"] in existing_role_list:
             if user_info[user_name]["active"]:
-
                 list_of_policy_objects = get_policy_info(
                     a_user_filtered_policy_name_list, all_policy_list
                 )

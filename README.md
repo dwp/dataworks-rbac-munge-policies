@@ -1,3 +1,5 @@
+# DO NOT USE THIS REPO - MIGRATED TO GITLAB
+
 # dataworks-rbac-munge-policies
 
 ## An application to create and manage IAM policies for emrfs for analytical-env users
